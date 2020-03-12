@@ -47,7 +47,7 @@ def get_iterators(src_path, trg_path, batch_size=128, debug=False):
     :return: train_iterator(torchtext.data.iterator.BucketIterator), valid_iterator (torchtext.data.iterator.BucketIterator),
      INPUT_DIM (int), OUTPUT_DIM (int)
     Example of usage:
-    >>>train_iterator, valid_iterator = get_iterators('corpus.en_ru.1m.en', 'corpus.en_ru.1m.ru', batch_size=128, debug=True)
+    >>>train_iterator, valid_iterator, INPUT_DIM, OUTPUT_DIM = get_iterators('corpus.en_ru.1m.en', 'corpus.en_ru.1m.ru', batch_size=128, debug=True)
     >>>for i, batch in enumerate(train_iterator):
     >>>    src = batch.Russian
     >>>    trg = batch.English
