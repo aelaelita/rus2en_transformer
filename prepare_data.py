@@ -37,7 +37,7 @@ def _train_test_split(src_path, trg_path, batch_size, debug):
     val.to_csv("val.csv", index=False)
 
 
-def get_iterators(src_path, trg_path, batch_size=128, debug = False):
+def get_iterators(src_path, trg_path, batch_size=128, debug=False):
     """
     Prepare data for NMT task
     :param src_path: (str) path to file containing sentences on source language (Russian)
@@ -45,8 +45,13 @@ def get_iterators(src_path, trg_path, batch_size=128, debug = False):
     :param batch_size: (int)
     :param debug: (bool) if True less lengths of  train_iterator, valid_iterator are only 2 batches
     :return: train_iterator, valid_iterator of type (torchtext.data.iterator.BucketIterator)
+    Example of usage:
+    >>>train_iterator, valid_iterator = get_iterators('corpus.en_ru.1m.en', 'corpus.en_ru.1m.ru', batch_size=128, debug=True)
+    >>>for i, batch in enumerate(train_iterator):
+    >>>    src = batch.Russian
+    >>>    trg = batch.English
     """
-    _train_test_split(src_path, trg_path)
+    _train_test_split(src_path, trg_path, batch_size, debug)
     SRC = Field(tokenize=_tokenize_ru,
                 init_token='<sos>',
                 eos_token='<eos>',
