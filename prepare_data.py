@@ -44,7 +44,8 @@ def get_iterators(src_path, trg_path, batch_size=128, debug=False):
     :param trg_path: (str) path to file containing sentences on target language (English)
     :param batch_size: (int)
     :param debug: (bool) if True less lengths of  train_iterator, valid_iterator are only 2 batches
-    :return: train_iterator, valid_iterator of type (torchtext.data.iterator.BucketIterator)
+    :return: train_iterator(torchtext.data.iterator.BucketIterator), valid_iterator (torchtext.data.iterator.BucketIterator),
+     INPUT_DIM (int), OUTPUT_DIM (int)
     Example of usage:
     >>>train_iterator, valid_iterator = get_iterators('corpus.en_ru.1m.en', 'corpus.en_ru.1m.ru', batch_size=128, debug=True)
     >>>for i, batch in enumerate(train_iterator):
@@ -76,4 +77,4 @@ def get_iterators(src_path, trg_path, batch_size=128, debug=False):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     train_iterator, valid_iterator = BucketIterator.splits((train, val), batch_size=batch_size,
                                                            device=device)
-    return train_iterator, valid_iterator
+    return train_iterator, valid_iterator, len(SRC.vocab), len(TRG.vocab)
