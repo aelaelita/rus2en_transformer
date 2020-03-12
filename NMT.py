@@ -17,9 +17,9 @@ def train(data, encoder, decoder, criterion, e_optimizer, de_optimizer, debug_st
         src = batch.Russian
         trg = batch.English
         encoder_output, hidden = encoder(src, hidden)
-        decoder_input = tensor()
-        for t in range(1, trg.size(1)):
-            output, hidden = decoder(decoder_input, hidden, encoder_output)
+        # decoder_input = tensor()
+        # for t in range(1, trg.size(1)):
+        output, hidden = decoder(src, hidden, encoder_output)
         loss = criterion(output, trg)
         loss.backward()
         e_optimizer.step()

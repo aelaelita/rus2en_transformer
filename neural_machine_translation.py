@@ -20,18 +20,19 @@ class NMTEncoder(nn.Module):
 
 
 class NMTDecoder(nn.Module):
-    def __init__(self, hidden_dim, output_dim, max_length=100):
+    def __init__(self, hidden_dim, output_dim):
         super(NMTDecoder, self).__init__()
         self.embedding = nn.Embedding(output_dim, hidden_dim)
-        self.attention = NMTAttention(hidden_dim, max_length)
+        self.attention = NMTAttention(hidden_dim)
         self.gru = nn.GRU(hidden_dim, hidden_dim)
         self.linear = nn.Linear(hidden_dim, output_dim)
         self.softmax = nn.Softmax(dim=1)
 
     def forward(self, x, hidden, encoder_output):
+        encoder_output = encoder_output.permute(1, 0, 2)
+        hidden = hidden.permute(1, 0, 2)
         embedded = self.embedding(x)
-        encoder_output = encoder_output
-        out = self.attention(embedded[0], hidden[0], encoder_output)
+        out = self.attention(embedded, hidden, encoder_output)
         out, hidden = self.gru(out, hidden)
         out = self.linear(out)
         out = self.softmax(out[0])
@@ -39,18 +40,19 @@ class NMTDecoder(nn.Module):
 
 
 class NMTAttention(nn.Module):
-    def __init__(self, hidden_dim, max_length):
+    def __init__(self, hidden_dim):
         super(NMTAttention, self).__init__()
-        self.linear1 = nn.Linear(hidden_dim * 2, max_length)
+        self.linear1 = nn.Linear(hidden_dim, hidden_dim)
+        self.linear2 = nn.Linear(hidden_dim, hidden_dim)
+        self.linear3 = nn.Linear(hidden_dim, 1)
         self.softmax = nn.Softmax(dim=1)
-        self.linear2 = nn.Linear(hidden_dim * 2, hidden_dim)
         self.relu = nn.ReLU()
 
     def forward(self, embedded, hidden, encoder_output):
-        out = torch.cat((embedded, hidden), 1)
-        out = self.linear1(out)
-        out = self.softmax(out).unsqueeze(0)
-        out = torch.bmm(out, encoder_output)[0]
+        out = self.relu(self.linear1(encoder_output) + self.linear2(hidden))
+        out = self.linear3(out)
+        out = self.softmax(out)
+        out = torch.bmm(out, encoder_output)
         out = torch.cat((embedded, out), 1)
         out = self.linear2(out).unsqueeze(0)
         out = self.relu(out)
