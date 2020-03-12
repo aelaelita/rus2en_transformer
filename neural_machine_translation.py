@@ -14,6 +14,9 @@ class NMTEncoder(nn.Module):
         out, hidden = self.lstm(out)
         return out, hidden
 
+    def init_hidden(self):
+        return torch.zeros(1, 1, self.hidden_size)
+
 
 class NMTDecoder(nn.Module):
     def __init__(self, hidden_dim, output_dim, max_length=100):
@@ -38,14 +41,14 @@ class NMTAttention(nn.Module):
     def __init__(self, hidden_dim, max_length):
         super(NMTAttention, self).__init__()
         self.linear1 = nn.Linear(hidden_dim * 2, max_length)
-        self.softmax = nn.Softmax()
+        self.softmax = nn.Softmax(dim=1)
         self.linear2 = nn.Linear(hidden_dim * 2, hidden_dim)
         self.relu = nn.ReLU()
 
     def forward(self, embedded, hidden, encoder_output):
         out = torch.cat((embedded, hidden), 1)
         out = self.linear1(out)
-        out = self.softmax(out, dim=1).unsqueeze(0)
+        out = self.softmax(out).unsqueeze(0)
         out = torch.bmm(out, encoder_output)[0]
         out = torch.cat((embedded, out), 1)
         out = self.linear2(out).unsqueeze(0)
