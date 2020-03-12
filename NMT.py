@@ -6,7 +6,7 @@ from prepare_data import NMTDataset
 BATCH_SIZE = 128
 
 
-def train(data, encoder, decoder, criterion, e_optimizer, de_optimizer, tag_ix, debug_steps=100, epoch=-1,
+def train(data, encoder, decoder, criterion, e_optimizer, de_optimizer, tag_ix, debug_steps=1, epoch=-1,
           device=device('cpu')):
     encoder.train(True)
     decoder.train(True)
@@ -17,15 +17,10 @@ def train(data, encoder, decoder, criterion, e_optimizer, de_optimizer, tag_ix, 
     for i, batch in enumerate(data):
         src = batch.Russian
         trg = batch.English
-        if src.shape[0] != BATCH_SIZE:
-            continue
         loss = 0
         encoder_output, hidden = encoder(src, hidden)
         decoder_input = tensor([[tag_ix]] * BATCH_SIZE)
         for t in range(1, trg.size(1)):
-            print(t)
-            if t == 45:
-                print(t)
             out, hidden = decoder(decoder_input.to(device),
                                   hidden.to(device),
                                   encoder_output.to(device))
@@ -38,7 +33,7 @@ def train(data, encoder, decoder, criterion, e_optimizer, de_optimizer, tag_ix, 
         de_optimizer.step()
         ovr_loss += loss.item()
         if i % debug_steps == 0:
-            print(f'Epoch {epoch} ({i}/{len(data)}): loss={ovr_loss / i + 1}')
+            print(f'Epoch {epoch} ({int(i/debug_steps)}/{len(data)}): loss={ovr_loss / (i + 1)}')
 
 
 def main():

@@ -28,8 +28,8 @@ class NMTDataset:
         with open(self.trg_path) as fp:
             en_lines = fp.readlines()
         if debug:
-            ru_lines = ru_lines[:5 * batch_size]
-            en_lines = en_lines[:5 * batch_size]
+            ru_lines = ru_lines[:10 * batch_size - 1]
+            en_lines = en_lines[:10 * batch_size - 1]
         raw_data = {'English': [line for line in en_lines], 'Russian': [line for line in ru_lines]}
         df = pd.DataFrame(raw_data, columns=["English", "Russian"])
         train, val = train_test_split(df, test_size=0.1)
@@ -58,13 +58,13 @@ class NMTDataset:
                     eos_token='<eos>',
                     lower=True,
                     batch_first=True,
-                    fix_length=100)
+                    fix_length=50)
         TRG = Field(tokenize=self._tokenize_en,
                     init_token='<sos>',
                     eos_token='<eos>',
                     lower=True,
                     batch_first=True,
-                    fix_length=100)
+                    fix_length=50)
 
         data_fields = [('English', TRG), ('Russian', SRC)]
         # THIS LINES TAKES 10 MINUTES ON THE WHOLE DATASET
