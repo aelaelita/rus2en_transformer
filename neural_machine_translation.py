@@ -7,15 +7,16 @@ class NMTEncoder(nn.Module):
         super(NMTEncoder, self).__init__()
         self.hidden_dim = hidden_dim
         self.embedding = nn.Embedding(input_dim, hidden_dim)
-        self.lstm = nn.LSTM(hidden_dim, hidden_dim)
+        self.gru = nn.GRU(hidden_dim, hidden_dim)
 
     def forward(self, x, hidden):
-        out = self.embedding(x).view(1, 1, -1)
-        out, hidden = self.lstm(out)
+        out = self.embedding(x)
+        out = out.permute((1, 0, 2))
+        out, hidden = self.gru(out)
         return out, hidden
 
-    def init_hidden(self):
-        return torch.zeros(1, 1, self.hidden_size)
+    def init_hidden(self, batch_size):
+        return torch.zeros((1, batch_size, self.hidden_dim))
 
 
 class NMTDecoder(nn.Module):
@@ -23,15 +24,15 @@ class NMTDecoder(nn.Module):
         super(NMTDecoder, self).__init__()
         self.embedding = nn.Embedding(output_dim, hidden_dim)
         self.attention = NMTAttention(hidden_dim, max_length)
-        self.lstm = nn.LSTM(hidden_dim, hidden_dim)
+        self.gru = nn.GRU(hidden_dim, hidden_dim)
         self.linear = nn.Linear(hidden_dim, output_dim)
         self.softmax = nn.Softmax(dim=1)
 
     def forward(self, x, hidden, encoder_output):
-        embedded = self.embedding(x).view(1, 1, -1)
-        encoder_output = encoder_output.unsqueeze(0)
+        embedded = self.embedding(x)
+        encoder_output = encoder_output
         out = self.attention(embedded[0], hidden[0], encoder_output)
-        out, hidden = self.lstm(out, hidden)
+        out, hidden = self.gru(out, hidden)
         out = self.linear(out)
         out = self.softmax(out[0])
         return out, hidden
