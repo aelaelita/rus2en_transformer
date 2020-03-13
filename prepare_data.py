@@ -4,7 +4,8 @@ from torchtext.data import Field, BucketIterator
 from sklearn.model_selection import train_test_split
 import pandas as pd
 from nltk import tokenize
-
+import re
+WORD = re.compile(r'\w+')
 
 class NMTDataset:
     def __init__(self, src_path, trg_path):
@@ -16,10 +17,10 @@ class NMTDataset:
         self.trg_data = None
 
     def _tokenize_ru(self, text):
-        return tokenize.word_tokenize(text)
+        return WORD.findall(text)
 
     def _tokenize_en(self, text):
-        return tokenize.word_tokenize(text)
+        return WORD.findall(text)
 
     def _train_test_split(self, batch_size, debug):
         with open(self.src_path) as fp:
