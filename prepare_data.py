@@ -3,11 +3,9 @@ import torchtext
 from torchtext.data import Field, BucketIterator
 from sklearn.model_selection import train_test_split
 import pandas as pd
-
 import re
 
 WORD = re.compile(r'\w+')
-
 
 class NMTDataset:
     def __init__(self, src_path, trg_path):
@@ -26,10 +24,10 @@ class NMTDataset:
 
     def _train_test_split(self, batch_size, debug):
         with open(self.src_path) as fp:
-            ru_lines = fp.readlines()[:320]
+            ru_lines = fp.readlines()[:200000]
 
         with open(self.trg_path) as fp:
-            en_lines = fp.readlines()[:320]
+            en_lines = fp.readlines()[:200000]
         if debug:
             ru_lines = ru_lines[:10 * batch_size - 1]
             en_lines = en_lines[:10 * batch_size - 1]
@@ -84,7 +82,6 @@ class NMTDataset:
 
         self.src_data = SRC
         self.trg_data = TRG
-
         self.INPUT_DIM = len(SRC.vocab)
         self.OUTPUT_DIM = len(TRG.vocab)
 
