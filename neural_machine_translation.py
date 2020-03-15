@@ -53,4 +53,5 @@ class NMTAttention(nn.Module):
         out = self.softmax(out)
         context = torch.sum(out * encoder_output, dim=1).unsqueeze(1)
         out = torch.cat((context, embedded), -1)
+        out = self.relu(out)
         return out

@@ -3,7 +3,10 @@ import torchtext
 from torchtext.data import Field, BucketIterator
 from sklearn.model_selection import train_test_split
 import pandas as pd
-from nltk import tokenize
+
+import re
+
+WORD = re.compile(r'\w+')
 
 
 class NMTDataset:
@@ -16,17 +19,17 @@ class NMTDataset:
         self.trg_data = None
 
     def _tokenize_ru(self, text):
-        return tokenize.word_tokenize(text)
+        return WORD.findall(text)
 
     def _tokenize_en(self, text):
-        return tokenize.word_tokenize(text)
+        return WORD.findall(text)
 
     def _train_test_split(self, batch_size, debug):
         with open(self.src_path) as fp:
-            ru_lines = fp.readlines()
+            ru_lines = fp.readlines()[:320]
 
         with open(self.trg_path) as fp:
-            en_lines = fp.readlines()
+            en_lines = fp.readlines()[:320]
         if debug:
             ru_lines = ru_lines[:10 * batch_size - 1]
             en_lines = en_lines[:10 * batch_size - 1]
@@ -57,17 +60,16 @@ class NMTDataset:
                     init_token='<sos>',
                     eos_token='<eos>',
                     lower=True,
-                    batch_first=True,
-                    fix_length=50)
+                    batch_first=True)
+
         TRG = Field(tokenize=self._tokenize_en,
                     init_token='<sos>',
                     eos_token='<eos>',
                     lower=True,
-                    batch_first=True,
-                    fix_length=50)
+                    batch_first=True)
 
         data_fields = [('English', TRG), ('Russian', SRC)]
-        # THIS LINES TAKES 10 MINUTES ON THE WHOLE DATASET
+        # THIS LINE NOW TAKES LESS THAN 10 MINUTES ON THE WHOLE DATASET
         train, val = torchtext.data.TabularDataset.splits(path='./',
                                                           train='train.csv',
                                                           validation='val.csv',
@@ -82,6 +84,7 @@ class NMTDataset:
 
         self.src_data = SRC
         self.trg_data = TRG
+
         self.INPUT_DIM = len(SRC.vocab)
         self.OUTPUT_DIM = len(TRG.vocab)
 
