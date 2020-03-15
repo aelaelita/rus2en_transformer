@@ -1,3 +1,1 @@
-хаю хай
-
-качай дату тут: https://translate.yandex.net/corpus/1mcorpus.zip?st=F7uZ3WIQdNyig39R7GVC1Q&e=1584285075&ui=ru
+Link to Google Drive: https://drive.google.com/drive/u/0/folders/1X1jba-BdgtIBB6-ahzMLaZnWLBNFkI3x

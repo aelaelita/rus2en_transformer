@@ -7,47 +7,51 @@ class NMTEncoder(nn.Module):
         super(NMTEncoder, self).__init__()
         self.hidden_dim = hidden_dim
         self.embedding = nn.Embedding(input_dim, hidden_dim)
-        self.lstm = nn.LSTM(hidden_dim, hidden_dim)
+        self.gru = nn.GRU(hidden_dim, hidden_dim)
 
     def forward(self, x, hidden):
-        out = self.embedding(x).view(1, 1, -1)
-        out, hidden = self.lstm(out)
+        out = self.embedding(x)
+        out = out.permute((1, 0, 2))
+        out, hidden = self.gru(out)
         return out, hidden
+
+    def init_hidden(self, batch_size):
+        return torch.zeros((1, batch_size, self.hidden_dim))
 
 
 class NMTDecoder(nn.Module):
-    def __init__(self, hidden_dim, output_dim, max_length=100):
+    def __init__(self, hidden_dim, output_dim):
         super(NMTDecoder, self).__init__()
         self.embedding = nn.Embedding(output_dim, hidden_dim)
-        self.attention = NMTAttention(hidden_dim, max_length)
-        self.lstm = nn.LSTM(hidden_dim, hidden_dim)
+        self.attention = NMTAttention(hidden_dim)
+        self.gru = nn.GRU(2 * hidden_dim, hidden_dim)
         self.linear = nn.Linear(hidden_dim, output_dim)
-        self.softmax = nn.Softmax(dim=1)
 
     def forward(self, x, hidden, encoder_output):
-        embedded = self.embedding(x).view(1, 1, -1)
-        encoder_output = encoder_output.unsqueeze(0)
-        out = self.attention(embedded[0], hidden[0], encoder_output)
-        out, hidden = self.lstm(out, hidden)
+        encoder_output = encoder_output.permute(1, 0, 2)
+        hidden = hidden.permute(1, 0, 2)
+        embedded = self.embedding(x)
+        out = self.attention(embedded, hidden, encoder_output)
+        out, hidden = self.gru(out)
+        out = out.squeeze(1)
         out = self.linear(out)
-        out = self.softmax(out[0])
         return out, hidden
 
 
 class NMTAttention(nn.Module):
-    def __init__(self, hidden_dim, max_length):
+    def __init__(self, hidden_dim):
         super(NMTAttention, self).__init__()
-        self.linear1 = nn.Linear(hidden_dim * 2, max_length)
-        self.softmax = nn.Softmax()
-        self.linear2 = nn.Linear(hidden_dim * 2, hidden_dim)
+        self.linear1 = nn.Linear(hidden_dim, hidden_dim)
+        self.linear2 = nn.Linear(hidden_dim, hidden_dim)
+        self.linear3 = nn.Linear(hidden_dim, 1)
+        self.softmax = nn.Softmax(dim=1)
         self.relu = nn.ReLU()
 
     def forward(self, embedded, hidden, encoder_output):
-        out = torch.cat((embedded, hidden), 1)
-        out = self.linear1(out)
-        out = self.softmax(out, dim=1).unsqueeze(0)
-        out = torch.bmm(out, encoder_output)[0]
-        out = torch.cat((embedded, out), 1)
-        out = self.linear2(out).unsqueeze(0)
+        out = self.relu(self.linear1(encoder_output) + self.linear2(hidden))
+        out = self.linear3(out)
+        out = self.softmax(out)
+        context = torch.sum(out * encoder_output, dim=1).unsqueeze(1)
+        out = torch.cat((context, embedded), -1)
         out = self.relu(out)
         return out

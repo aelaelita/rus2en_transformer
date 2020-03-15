@@ -3,8 +3,8 @@ import torchtext
 from torchtext.data import Field, BucketIterator
 from sklearn.model_selection import train_test_split
 import pandas as pd
-from nltk import tokenize
 import re
+
 WORD = re.compile(r'\w+')
 
 class NMTDataset:
@@ -24,10 +24,10 @@ class NMTDataset:
 
     def _train_test_split(self, batch_size, debug):
         with open(self.src_path) as fp:
-            ru_lines = fp.readlines()
+            ru_lines = fp.readlines()[:200000]
 
         with open(self.trg_path) as fp:
-            en_lines = fp.readlines()
+            en_lines = fp.readlines()[:200000]
         if debug:
             ru_lines = ru_lines[:10 * batch_size - 1]
             en_lines = en_lines[:10 * batch_size - 1]
@@ -58,17 +58,16 @@ class NMTDataset:
                     init_token='<sos>',
                     eos_token='<eos>',
                     lower=True,
-                    batch_first=True,
-                    fix_length=100)
+                    batch_first=True)
+
         TRG = Field(tokenize=self._tokenize_en,
                     init_token='<sos>',
                     eos_token='<eos>',
                     lower=True,
-                    batch_first=True,
-                    fix_length=100)
+                    batch_first=True)
 
         data_fields = [('English', TRG), ('Russian', SRC)]
-        # THIS LINE TAKES 10 MINUTES ON THE WHOLE DATASET
+        # THIS LINE NOW TAKES LESS THAN 10 MINUTES ON THE WHOLE DATASET
         train, val = torchtext.data.TabularDataset.splits(path='./',
                                                           train='train.csv',
                                                           validation='val.csv',
